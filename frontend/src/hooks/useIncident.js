@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { fetchHealth, fetchActiveIncident, fetchIncidents, fetchMemories, disconnectApplication, fetchApplicationStatus } from '../utils/api'
+import { demoEngine } from '../utils/demoEngine'
 import { useWebSocket } from './useWebSocket'
 
 export function useIncident() {
@@ -20,7 +21,7 @@ export function useIncident() {
       setIncident(updated)
       
       // Update health state
-      if (updated.status === 'resolved') {
+      if (!updated || updated.status === 'resolved') {
         setHealth(h => ({
           ...h,
           status: 'healthy',
@@ -39,7 +40,6 @@ export function useIncident() {
       setIncident(prev => {
         if (!prev) return prev
         const existingEvents = prev.events || []
-        // Avoid duplicate events
         if (existingEvents.some(e => e.id === msg.data.id)) return prev
         return {
           ...prev,
@@ -50,6 +50,13 @@ export function useIncident() {
   }, [])
 
   const { connected } = useWebSocket(onWsMessage)
+
+  useEffect(() => {
+    const unsub = demoEngine.subscribe((event, data) => {
+      onWsMessage({ type: event, data })
+    })
+    return () => unsub()
+  }, [onWsMessage])
 
   // Polling fallback / periodic sync
   const syncData = useCallback(async () => {
