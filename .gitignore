@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+dist/
+build/
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pytest_cache/
+.pytest_cache/
+
+# Chaos / runtime state
+.chaos_active
+*.log
+backend/reports/
+demo_err.log
+backend_err.log
+vite_out.log
+vite_err.log
+
+# Database
+*.db
+*.sqlite3
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
