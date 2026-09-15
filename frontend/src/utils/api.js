@@ -94,7 +94,7 @@ export async function fetchReportStatus(id) {
 export async function downloadReport(id) {
   try {
     const res = await fetch(`${API_BASE}/incidents/${id}/report?disposition=attachment`)
-    if (!res.ok) throw new Error('Failed to download report')
+    if (!res.ok) throw new Error('Failed to download from backend')
     const blob = await res.blob()
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -106,8 +106,11 @@ export async function downloadReport(id) {
     setTimeout(() => window.URL.revokeObjectURL(url), 2000)
     return true
   } catch (e) {
-    // Generate simple client PDF or alert
-    alert(`Post-Incident Review Report for ${id} generated.`)
+    // Client-side fallback PDF generation for GitHub Pages and offline demo
+    const { generateClientIncidentPDF } = await import('./clientPdf')
+    const inc = demoEngine.getActiveIncident() || demoEngine.getIncidents().find(i => i.id === id)
+    const doc = generateClientIncidentPDF(inc || { id })
+    doc.save(`ChaosMedic_Incident_${id}.pdf`)
     return true
   }
 }
@@ -115,7 +118,7 @@ export async function downloadReport(id) {
 export async function viewReport(id) {
   try {
     const res = await fetch(`${API_BASE}/incidents/${id}/report?disposition=inline`)
-    if (!res.ok) throw new Error('Failed to open report')
+    if (!res.ok) throw new Error('Failed to open from backend')
     const blob = await res.blob()
     const fileBlob = new Blob([blob], { type: 'application/pdf' })
     const url = window.URL.createObjectURL(fileBlob)
@@ -124,7 +127,13 @@ export async function viewReport(id) {
     setTimeout(() => window.URL.revokeObjectURL(url), 60000)
     return true
   } catch (e) {
-    alert(`Post-Incident Review Report for ${id} is ready.`)
+    // Client-side fallback PDF preview for GitHub Pages and offline demo
+    const { generateClientIncidentPDF } = await import('./clientPdf')
+    const inc = demoEngine.getActiveIncident() || demoEngine.getIncidents().find(i => i.id === id)
+    const doc = generateClientIncidentPDF(inc || { id })
+    const pdfBlob = doc.output('blob')
+    const url = URL.createObjectURL(pdfBlob)
+    window.open(url, '_blank')
     return true
   }
 }
